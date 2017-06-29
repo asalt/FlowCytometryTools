@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import six
 import collections
 import inspect
 from itertools import cycle
@@ -146,7 +147,7 @@ class FCMeasurement(Measurement):
 
             gate_lw = cycle(gate_lw)
 
-            for (g, c, lw) in zip(gates, gate_colors, gate_lw):
+            for (g, c, lw) in list(zip(gates, gate_colors, gate_lw)):
                 g.plot(ax=ax, ax_channels=channel_names, color=c, lw=lw)
 
         return plot_output
@@ -448,8 +449,8 @@ class FCCollection(MeasurementCollection):
         '''
         new = self.copy()
         if share_transform:
-            channel_meta = self.values()[0].channels
-            channel_names = self.values()[0].channel_names
+            channel_meta = list(self.values())[0].channels
+            channel_names = list(self.values())[0].channel_names
             if channels is None:
                 channels = list(channel_names)
             else:
@@ -482,12 +483,12 @@ class FCCollection(MeasurementCollection):
                     xmax = self.apply(lambda x: x[channels].max().max(), applyto='data').max().max()
                     xmin = self.apply(lambda x: x[channels].min().min(), applyto='data').min().min()
                     transformer.set_spline(xmin, xmax)
-            ## transform all measurements     
-            for k, v in new.iteritems():
+            ## transform all measurements
+            for k, v in six.iteritems(new):
                 new[k] = v.transform(transformer, channels=channels, return_all=return_all,
                                      use_spln=use_spln, apply_now=apply_now)
         else:
-            for k, v in new.iteritems():
+            for k, v in six.iteritems(new):
                 new[k] = v.transform(transform, direction=direction, channels=channels,
                                      return_all=return_all, auto_range=auto_range,
                                      get_transformer=False,
@@ -648,8 +649,8 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                     min_list.append(self[sample].data[channel_names].min().values)
                     max_list.append(self[sample].data[channel_names].max().values)
 
-                min_list = zip(*min_list)
-                max_list = zip(*max_list)
+                min_list = list(zip(*min_list))
+                max_list = list(zip(*max_list))
 
                 bins = []
 
@@ -658,7 +659,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
                     max_v = max(max_list[i])
                     bins.append(np.linspace(min_v, max_v, nbins))
 
-                # Check if 1d 
+                # Check if 1d
                 if len(channel_names) == 1:
                     bins = bins[0]  # bins should be an ndarray, not a list of ndarrays
 
@@ -666,7 +667,7 @@ class FCOrderedCollection(OrderedCollection, FCCollection):
 
         ##########
         # Defining the plotting function that will be used.
-        # At the moment grid_plot handles the labeling 
+        # At the moment grid_plot handles the labeling
         # (rather than sample.plot or the base function
         # in GoreUtilities.graph
 
